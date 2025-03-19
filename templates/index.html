@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Athleticism Score Predictor - NFL Draft</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #141414;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #0073e6;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin: 0;
+            font-weight: bold;
+        }
+        h2 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #f1c40f;
+        }
+        .container {
+            max-width: 700px;
+            margin: 20px auto;
+            background-color: #2c2f34;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input[type="text"] {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 5px;
+            border: 2px solid #444;
+            background-color: #1e1e1e;
+            color: white;
+            font-size: 1.2em;
+        }
+        button {
+            padding: 12px;
+            background-color: #f39c12;
+            color: white;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #e67e22;
+        }
+        .result {
+            background-color: #444;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .boom {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5em;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .good {
+            background-color: #2ecc71;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5em;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .average {
+            background-color: #f39c12;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5em;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .bust {
+            background-color: #e74c3c;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5em;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .draft-round {
+            background-color: #2ecc71;
+            color: white;
+            font-weight: bold;
+            font-size: 1.4em;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .status-section {
+            background-color: #2c3e50;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .status-section h3 {
+            font-size: 2em;
+        }
+
+        /* Chart Section */
+      .chart-section {
+    margin-top: 40px;
+    text-align: center;
+    padding: 20px;
+}
+
+.chart-section h2 {
+    font-size: 1.6em;
+    margin-bottom: 10px;
+}
+
+.chart-section p {
+    font-size: 1.2em;
+    color: #aaa;
+    margin-bottom: 20px;
+}
+
+.image-container {
+    display: inline-block;
+    margin: 20px;
+}
+
+.image-container img {
+    width: 550px;  /* Smaller size for each image */
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NFL Draft Athleticism Score Predictor</h1>
+    </header>
+
+    <div class="container">
+        <!-- Instruction Section -->
+        <h2>Step 1: Enter Combine Data</h2>
+        <p>Enter the combine data for the athlete (40-yard dash, bench press, and vertical jump) to calculate their athleticism score.</p>
+
+        <form action="/predict" method="POST">
+            <input type="text" name="40_yard_dash" placeholder="40 Yard Dash (seconds)" required>
+            <input type="text" name="bench_press" placeholder="Bench Press (reps)" required>
+            <input type="text" name="vertical" placeholder="Vertical Jump (inches)" required>
+            <button type="submit">Get Athletic Score</button>
+        </form>
+
+        {% if prediction is not none %}
+            <div class="result">
+                <h3>Athletic Score: {{ prediction }}</h3>
+            </div>
+        {% endif %}
+
+        <!-- Classify Athletic Score -->
+        <h2>Step 2: Enter Athlete's Name and Athletic Score for Classification</h2>
+        <p>After calculating the athletic score, enter the athlete's name and score for classification.</p>
+
+        <form action="/classify" method="POST">
+            <input type="text" name="name" placeholder="Enter Athlete's Name" required>
+            <input type="text" name="athletic_score" placeholder="Enter Athletic Score" required>
+            <button type="submit">Classify Athlete</button>
+        </form>
+
+        {% if status is not none %}
+            <div class="status-section">
+                <h3>{{ name }} - Status:
+                    {% if status == 'Boom' %}
+                        <span class="boom">{{ status }}</span>
+                    {% elif status == 'Good' %}
+                        <span class="good">{{ status }}</span>
+                    {% elif status == 'Average' %}
+                        <span class="average">{{ status }}</span>
+                    {% else %}
+                        <span class="bust">{{ status }}</span>
+                    {% endif %}
+                </h3>
+
+                <div class="draft-round">
+                    <h4>Draft Round: {{ draft_round }}</h4>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+<!-- Hall of Fame Player Comparison Section -->
+<div class="hall-of-fame-section">
+    <h2>Players Comparison - Athletic Scores vs PFF Grade</h2>
+<p style="font-size: 1.2em; color: white; text-align: center;">
+    Compare the actual "career" scores from
+    <a href="https://www.pff.com" target="_blank" style="color: #f39c12; text-decoration: none;">PFF.com</a>
+    of current players with the predicted scores from our model.
+    Hover over each bar to see the exact values and assess the accuracy of our predictions.
+</p>
+
+    <canvas id="hallOfFameChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const players = [
+        { name: "Lamar Jackson", actual: 94.9, predicted: 92 },
+        { name: "Bijan Robinson", actual: 92.8, predicted: 90 },
+        { name: "Pat Surtain II", actual: 83.8, predicted: 79 },
+        { name: "Will Levis", actual: 54.6, predicted: 57 },
+        { name: "George Pickens", actual: 76.9, predicted: 78 }
+    ];
+
+    const playerNames = players.map(player => player.name);
+    const actualScores = players.map(player => player.actual);
+    const predictedScores = players.map(player => player.predicted);
+
+    const ctx = document.getElementById('hallOfFameChart').getContext('2d');
+    const hallOfFameChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: playerNames, // Hall of Fame player names
+            datasets: [{
+                label: 'PFF Score',
+                data: actualScores,
+                backgroundColor: '#3498db', // Blue
+                borderColor: '#2980b9',
+                borderWidth: 1
+            },
+            {
+                label: 'Predicted Score',
+                data: predictedScores,
+                backgroundColor: '#2ecc71', // Green
+                borderColor: '#27ae60',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return tooltipItem.dataset.label + ': ' + tooltipItem.raw;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Athletic Score'
+                    }
+                }
+            },
+            hover: {
+                mode: 'index',
+                intersect: false
+            }
+        }
+    });
+</script>
+
+    <!-- Charts Section -->
+    <!-- Charts Section -->
+<div class="chart-section">
+    <h2>Speedsters - 40 Yard Dash Distribution</h2>
+    <p>This chart shows the distribution of 40-yard dash times for our 2025 combine players. We have some speedsters!</p>
+    <div class="image-container">
+        <img src="{{ url_for('static', filename='40_yard_dash_distribution_players.png') }}" alt="40 Yard Dash Distribution">
+    </div>
+
+    <h2>Athleticism Distribution</h2>
+    <p>This chart shows the distribution of athleticism scores across athletes for the 2025 class.</p>
+    <div class="image-container">
+        <img src="{{ url_for('static', filename='athleticism_distribution.png') }}" alt="Athleticism Distribution">
+    </div>
+
+    <h2>Model Accuracy - Residual Plot</h2>
+    <p>This plot shows the residuals of the predictions, indicating the accuracy of the model. The closer our model stays to that dotted line, the better!</p>
+    <div class="image-container">
+        <img src="{{ url_for('static', filename='residual_plot2.png') }}" alt="Residual Plot">
+    </div>
+</div>

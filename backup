@@ -1,0 +1,91 @@
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import pandas as pd
+import pickle
+import numpy as np
+
+# Load your trained model (make sure the file path is correct)
+try:
+    with open('athleticism_model.pkl', 'rb') as model_file:
+        model = pickle.load(model_file)
+        print("Model loaded successfully.")
+except Exception as e:
+    print(f"Error loading model: {e}")
+    model = None
+
+# Create the Dash app
+app = dash.Dash(__name__)
+
+# Define the layout of the app
+app.layout = html.Div([
+    html.H1('Athleticism Prediction'),
+
+    # Input fields for user data
+    dcc.Input(id='40yd-input', type='number', placeholder='Enter 40 yard dash time', min=0),
+    dcc.Input(id='bench-input', type='number', placeholder='Enter Bench Press reps', min=0),
+    dcc.Input(id='vertical-input', type='number', placeholder='Enter Vertical Jump height', min=0),
+
+    # Button to submit the inputs
+    html.Button('Predict', id='predict-button', n_clicks=0),
+
+    # Output text for the prediction
+    html.Div(id='athleticism-output'),
+
+    # Output text for the boom or bust prediction
+    html.Div(id='boom-bust-output')
+])
+
+
+# Define the callback to update the output based on user input
+@app.callback(
+    [Output('athleticism-output', 'children'),
+     Output('boom-bust-output', 'children')],
+    [Input('predict-button', 'n_clicks')],
+    [dash.dependencies.State('40yd-input', 'value'),
+     dash.dependencies.State('bench-input', 'value'),
+     dash.dependencies.State('vertical-input', 'value')]
+)
+def update_output(n_clicks, input_40yd, input_bench, input_vertical):
+    if n_clicks > 0:
+        try:
+            # Ensure inputs are not empty and convert to appropriate types
+            if input_40yd is not None and input_bench is not None and input_vertical is not None:
+                # Create a DataFrame from the input values
+                user_input = {
+                    '40 Yard Dash': [float(input_40yd)],
+                    'Bench Press': [float(input_bench)],
+                    'Vertical Jump': [float(input_vertical)]
+                }
+                user_input_df = pd.DataFrame(user_input)
+
+                if model:
+                    # Predict athleticism score using the trained model
+                    prediction = model.predict(user_input_df)
+
+                    # If prediction is an array, extract the scalar value (first element)
+                    if isinstance(prediction, np.ndarray) and len(prediction) > 0:
+                        prediction_value = prediction[0]
+                    else:
+                        prediction_value = prediction
+
+                    # Predict Boom or Bust based on the score
+                    if prediction_value > 80:  # This threshold can be adjusted based on your model's predictions
+                        boom_or_bust = "Boom"
+                    else:
+                        boom_or_bust = "Bust"
+
+                    return f'Athleticism Score: {prediction_value:.2f}', f'Prediction: {boom_or_bust}'
+                else:
+                    return "Error: Model is not loaded", ""
+            else:
+                return "Please fill in all fields!", ""
+        except Exception as e:
+            return f"Error during prediction: {e}", ""
+
+    return "Enter data and click Predict", ""
+
+
+# Run the app
+if __name__ == '__main__':
+    app.run(debug=True)
